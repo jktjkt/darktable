@@ -116,6 +116,8 @@ button_clicked(GtkWidget *widget, gpointer user_data)
   else if(i == 9) dt_control_copy_images();
   else if(i == 10) _group_helper_function();
   else if(i == 11) _ungroup_helper_function();
+  else if(i == 12) dt_control_local_set_cache_images();
+  else if(i == 13) dt_control_local_reset_cache_images();
 }
 
 int
@@ -199,6 +201,22 @@ gui_init (dt_lib_module_t *self)
   g_object_set(G_OBJECT(button), "tooltip-text", _("reset rotation to exif data"), (char *)NULL);
   gtk_box_pack_start(hbox, button, TRUE, TRUE, 0);
   g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(button_clicked), (gpointer)6);
+
+  gtk_box_pack_start(GTK_BOX(self->widget), GTK_WIDGET(hbox), TRUE, TRUE, 0);
+  hbox = GTK_BOX(gtk_hbox_new(TRUE, 5));
+
+  //  ???do this only if the image is not local?
+  button = gtk_button_new_with_label(_("cache locally"));
+  d->duplicate_button = button;
+  g_object_set(G_OBJECT(button), "tooltip-text", _("cache the image locally"), (char *)NULL);
+  gtk_box_pack_start(hbox, button, TRUE, TRUE, 0);
+  g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(button_clicked), (gpointer)12);
+
+  button = gtk_button_new_with_label(_("reset cache"));
+  d->duplicate_button = button;
+  g_object_set(G_OBJECT(button), "tooltip-text", _("remove the image from the cache"), (char *)NULL);
+  gtk_box_pack_start(hbox, button, TRUE, TRUE, 0);
+  g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(button_clicked), (gpointer)13);
 
   gtk_box_pack_start(GTK_BOX(self->widget), GTK_WIDGET(hbox), TRUE, TRUE, 0);
   hbox = GTK_BOX(gtk_hbox_new(TRUE, 5));

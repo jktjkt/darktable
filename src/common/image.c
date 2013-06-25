@@ -166,10 +166,10 @@ static void _image_cache_full_path(const int imgid, char *pathname, int len)
     g_strlcpy(filename, (char *)sqlite3_column_text(stmt, 0), len);
     char *md5_filename = g_compute_checksum_for_string (G_CHECKSUM_MD5, filename, strlen (filename));
     dt_loc_get_user_cache_dir(pathname, len);
-    g_strlcat(pathname, "/cache/", len);
+    g_strlcat(pathname, "/img-", len);
     g_strlcat(pathname, md5_filename, len);
 
-    // and finally, add extension
+    // and finally, add extension, needed as some part of the code is looking for the extension
     char *c = filename + strlen(filename);
     while(*c != '.' && c > filename) c--;
 
@@ -936,6 +936,51 @@ int32_t dt_image_copy(const int32_t imgid, const int32_t filmid)
   }
 
   return newid;
+}
+
+void dt_image_local_cache_set(const int32_t imgid)
+{
+  gchar srcpath[DT_MAX_PATH_LEN] = {0};
+  gchar destpath[DT_MAX_PATH_LEN] = {0};
+
+  gboolean from_cache = FALSE;
+  dt_image_full_path(imgid, srcpath, DT_MAX_PATH_LEN, &from_cache);
+
+  _image_cache_full_path(imgid, destpath, DT_MAX_PATH_LEN);
+
+  if (!g_file_test(destpath, G_FILE_TEST_IS_REGULAR))
+  {
+    GFile *src = g_file_new_for_path(srcpath);
+    GFile *dest = g_file_new_for_path(destpath);
+
+    // copy image to cache directory
+    GError *gerror = NULL;
+    g_file_copy(src, dest, G_FILE_COPY_NONE, NULL, NULL, NULL, &gerror);
+
+    g_object_unref(dest);
+    g_object_unref(src);
+  }
+}
+
+void dt_image_local_cache_reset(const int32_t imgid)
+{
+  gchar destpath[DT_MAX_PATH_LEN] = {0};
+  gchar cachedir[DT_MAX_PATH_LEN] = {0};
+  _image_cache_full_path(imgid, destpath, DT_MAX_PATH_LEN);
+
+  //  remove cached file, but double check that this is really into the cache. We really want to avoid deleting
+  //  a user's original file.
+
+  dt_loc_get_user_cache_dir(cachedir, DT_MAX_PATH_LEN);
+
+  if (g_file_test(destpath, G_FILE_TEST_IS_REGULAR) && strstr(destpath, cachedir))
+  {
+    GFile *dest = g_file_new_for_path(destpath);
+
+    // copy image to cache directory
+    g_file_delete(dest, NULL, NULL);
+    g_object_unref(dest);
+  }
 }
 
 // *******************************************************
