@@ -36,6 +36,8 @@
 #include <curl/curl.h>
 #include <json-glib/json-glib.h>
 
+#define FACEBOOK_EXTRA_VERBOSE
+
 #ifdef HAVE_HTTP_SERVER
 #include "common/http_server.h"
 static const int port_pool[] = { 8123, 9123, 10123, 11123 };
@@ -591,8 +593,11 @@ static gboolean _open_browser(const char *callback_url)
   char *url = g_strdup_printf(FB_WS_BASE_URL "dialog/oauth?"
                                              "client_id=" FB_API_KEY "&redirect_uri=%s"
                                              "&scope=user_photos,publish_stream"
-                                             "&response_type=token",
+                                             "&response_type=token,granted_scopes",
                               callback_url);
+#ifdef FACEBOOK_EXTRA_VERBOSE
+  g_printf("Opening URL: %s\n", url);
+#endif
   if(!gtk_show_uri(gdk_screen_get_default(), url, gtk_get_current_event_time(), &error))
   {
     fprintf(stderr, "[facebook] error opening browser: %s\n", error->message);
